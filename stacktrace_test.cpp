@@ -1,3 +1,5 @@
+#include <cstdio>    // for std::printf. Or just use 'printf'
+#include <stdexcept> // for std::runtime_error
 #include <vector>
 #include <map>
 

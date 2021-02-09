@@ -10,3 +10,19 @@ example: get_stacktrace_on_exception.cpp
 
 hack: stacktrace_test.cpp stacktrace_on_exception.cpp stacktrace_on_exception.h
 	g++ $(CXXFLAGS) $(LDFLAGS) -std=c++11 -O2 -ldl -fdiagnostics-color=always $^ -o $@
+
+stacktrace_on_exception.o: stacktrace_on_exception.cpp stacktrace_on_exception.h
+	g++ -c -fPIC $(CXXFLAGS) -std=c++11 -O2 $(LDFLAGS) -ldl -fdiagnostics-color=always $< -o $@
+
+libstacktrace_on_exception.so: stacktrace_on_exception.o
+	g++ $(CXXFLAGS) $(LDFLAGS) -fPIC -shared -std=c++11 -O2 -ldl -fdiagnostics-color=always $^ -o $@
+
+hack2: stacktrace_test.cpp libstacktrace_on_exception.so
+	LD_RUN_PATH=${PWD} g++ $(CXXFLAGS) -std=c++11 -O2 $(LDFLAGS) $< -L. -lstacktrace_on_exception -o $@
+
+clean:
+	@rm -f example
+	@rm -f hack
+	@rm -f hack2
+	@rm -f stacktrace_on_exception.o
+	@rm -f libstacktrace_on_exception.so
