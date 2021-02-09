@@ -20,6 +20,11 @@ libstacktrace_on_exception.so: stacktrace_on_exception.o
 hack2: stacktrace_test.cpp libstacktrace_on_exception.so
 	LD_RUN_PATH=${PWD} g++ $(CXXFLAGS) -std=c++11 -O2 $(LDFLAGS) $< -L. -lstacktrace_on_exception -o $@
 
+# don't even link against it, just load the library when calling the executable with:
+# `LD_PRELOAD=/path/to/libstacktrace_on_exception.so ./hack3`
+hack3: stacktrace_test.cpp
+	g++ $(CXXFLAGS) -std=c++11 -O2 $^ -o $@
+
 clean:
 	@rm -f example
 	@rm -f hack
