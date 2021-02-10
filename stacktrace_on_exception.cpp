@@ -39,6 +39,62 @@ static void get_backtrace(void)
     }
 }
 
+// ====================
+// Alternative methods to print backtrace, but in a way able to resolve symbols in external libraries
+// from https://stackoverflow.com/a/63855266, credit Yale Zhang
+#include <link.h>
+
+// convert a function's address in memory to its VMA address in the executable file. VMA is what addr2line expects
+size_t ConvertToVMA(size_t addr){
+  Dl_info info;
+  link_map* link_map;
+  dladdr1((void*)addr,&info,(void**)&link_map,RTLD_DL_LINKMAP);
+  return addr-link_map->l_addr;
+}
+
+void get_backtrace2(){
+  void *callstack[128];
+  int frame_count = backtrace(callstack, sizeof(callstack)/sizeof(callstack[0]));
+  std::printf("\n");
+  for (int i = 3; i < frame_count; i++){  // first two are in this function, so start from i=3
+    char location[1024];
+    Dl_info info;
+    if(dladdr(callstack[i],&info)){
+      char command[256];
+      size_t VMA_addr=ConvertToVMA((size_t)callstack[i]);
+      //if(i!=crash_depth)
+      // https://stackoverflow.com/questions/11579509/wrong-line-numbers-from-addr2line/63841497#63841497
+      VMA_addr-=1;
+      std::snprintf(command,sizeof(command),"addr2line -e %s -Ci %zx",info.dli_fname,VMA_addr);
+      system(command);
+    }
+  }
+}
+
+// ====================
+
+// ====================
+// Another alternative method that involves invoking gdb and attaching to the current process
+void get_backtrace3(){
+    // invoke gdb to print a backtrace at the current location
+    static char cmd[std::strlen("/usr/bin/gdb --nx --batch --quiet -ex 'set confirm off' -ex 'attach XXXXX' -ex 'thread apply all bt full' -ex quit")];
+    std::sprintf(cmd, "/usr/bin/gdb --nx --batch --quiet -ex 'set confirm off' -ex 'attach %u' -ex 'thread apply all bt full' -ex quit", getpid());
+    std::system(cmd);
+}
+// ====================
+
+// ====================
+// Yet another alternative based on BOOST
+/* comment out because i don't want to depend on boost
+// https://www.boost.org/doc/libs/1_65_1/doc/html/stacktrace.html
+#define BOOST_STACKTRACE_USE_ADDR2LINE
+#include <boost/stacktrace.hpp>
+void get_backtrace4(){
+    std::cout << boost::stacktrace::stacktrace() << std::endl;
+}
+*/
+// =====================
+
 // Exception handling common to __cxz_throw and __cxa_rethrow
 static void handle_exception(void* thrown_exception, std::type_info* tinfo, bool rethrown)
 {
@@ -59,7 +115,9 @@ static void handle_exception(void* thrown_exception, std::type_info* tinfo, bool
     }
 
     std::fprintf(stderr, "▿▿▿▿▿▿▿▿▿▿▿");
-    get_backtrace();
+    //get_backtrace();  // does not resolve symbols in external libraries (such as ToolAnalysis tools!)
+    get_backtrace2();   // DOES resolve such external symbols
+    //get_backtrace3();   // much slower BUT way more info, including defined local variables!
     std::fprintf(stderr, "▵▵▵▵▵▵▵▵▵▵▵\n\n");
 }
 

@@ -1,2 +1,13 @@
-Code taken directly from https://web.archive.org/web/20150706050621/http://blog.sjinks.pro/c-cpp/969-track-uncaught-exceptions, credit Опубликовано Vladimir (i believe, please open an issue to correct this if incorrect)
-Stack overflow version from https://stackoverflow.com/a/11674810.
+Code taken from https://web.archive.org/web/20150706050621/http://blog.sjinks.pro/c-cpp/969-track-uncaught-exceptions, credit Опубликовано Vladimir (i believe, please open an issue to correct this if incorrect)
+Improved stacktrace print function by Yale Zhang from https://stackoverflow.com/a/63855266.
+Other stacktrace print functions based on boost::stacktrace and gdb are also included.
+The gdb version also prints local variables and threading information, but is much slower.
+Ensure your application is compiled with debug symbols (`-g`) and linker options `-ldl -rdynamic` (or `-Wl,-export-dynamic`).
+
+compilation: `make hack2` (builds the library version)
+Then to print stacktraces on exceptions when running your program, preload this library when calling your binary:
+LD_PRELOAD=/path/to/libstacktrace_on_exception.so ./main <args>
+
+An alternative, shorter version of a program to override __cxa_throw is included from https://stackoverflow.com/a/11674810.
+
+

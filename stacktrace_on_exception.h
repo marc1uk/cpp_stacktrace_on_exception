@@ -2,8 +2,8 @@
 #include <exception>
 #include <dlfcn.h>
 #include <pthread.h>
-#include <cstdio>
-#include <cstdlib>
+#include <cstdio>   // deprecated equivalent without std:: namespace, 'stdio.h'
+#include <cstdlib>  // deprecated equivalent without std:: namespace, 'stdlib.h'
 #include <inttypes.h>
 #include <execinfo.h>
 #include <cxxabi.h> // Defines types from namespace abi
@@ -80,6 +80,12 @@ static void initialize(void);
 
 extern "C" void __cxa_throw(void* thrown_exception, std::type_info* tinfo, void (*dest)(void*));
 extern "C" void __cxa_rethrow(void);
+
+// swap-in alternatives to printing the backtrace
+size_t ConvertToVMA(size_t addr);
+void get_backtrace2();
+void get_backtrace3();
+/*void get_backtrace4(); // depends on boost*/
 
 }  // end anonymous namespace
 
